@@ -957,6 +957,11 @@ function blobToBase64(blob){
   });
 }
 
+function genId(){
+  if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
+  return "id-" + Date.now() + "-" + Math.random().toString(16).slice(2);
+}
+
 function getQueue(){
   return JSON.parse(localStorage.getItem("pendingReports") || "[]");
 }
@@ -1019,6 +1024,7 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
   const mensagemFormatada = buildReport();
 
   const payload = {
+    reportId: genId(),
     tecnico: document.getElementById("tecnico").value.trim(),
     fazenda: document.getElementById("fazenda").value.trim(),
     maquina,
