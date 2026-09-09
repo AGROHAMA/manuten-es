@@ -1,0 +1,15 @@
+{
+  "name": "Relatório de Serviço - Agrohama",
+  "short_name": "Relatório Agrohama",
+  "description": "Registro rápido de manutenção com áudio, direto para o SharePoint/Teams",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F4F8F4",
+  "theme_color": "#1F4E2C",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
