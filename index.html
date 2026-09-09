@@ -259,6 +259,14 @@
     margin-bottom:14px;
     display:none;
     line-height:1.4;
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    width:calc(100% - 32px);
+    max-width:520px;
+    z-index:80;
+    box-shadow:0 6px 20px rgba(0,0,0,.18);
   }
   .banner.show{display:block;}
   .banner.ok{background:var(--green-light);color:var(--green-dark);border:1px solid #BEDAC4;}
@@ -946,6 +954,7 @@ document.getElementById("btnClosePreview").addEventListener("click", () => {
 const bannerOk = document.getElementById("bannerOk");
 const bannerErr = document.getElementById("bannerErr");
 const bannerPending = document.getElementById("bannerPending");
+let bannerOkTimer = null;
 const btnSubmit = document.getElementById("btnSubmit");
 
 function blobToBase64(blob){
@@ -1062,7 +1071,10 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
       });
     }
     await sendPayload(payload);
+    window.scrollTo({top:0, behavior:"smooth"});
     bannerOk.classList.add("show");
+    clearTimeout(bannerOkTimer);
+    bannerOkTimer = setTimeout(() => bannerOk.classList.remove("show"), 5000);
     e.target.reset();
     tecnicoInput.value = "";
     fazendaInput.value = localStorage.getItem("fazendaNome") || "";
@@ -1087,6 +1099,7 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
     const queue = getQueue();
     queue.push(payload);
     saveQueue(queue);
+    window.scrollTo({top:0, behavior:"smooth"});
     bannerErr.classList.add("show");
   }finally{
     btnSubmit.disabled = false;
