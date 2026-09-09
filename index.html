@@ -356,8 +356,8 @@
         <select id="tipoAcao" required>
           <option value="troca">Troca de peça / óleo / filtro</option>
           <option value="reparo">Reparo</option>
-          <option value="compra">Compra de reposição (estoque)</option>
-          <option value="instalacao">Instalação</option>
+          <option value="compra_instalacao">Compra/Instalação</option>
+          <option value="estoque_instalacao">Estoque/Instalação</option>
         </select>
       </div>
       <div class="field">
@@ -843,8 +843,8 @@ function slugify(str){
 const ACAO_LABELS = {
   troca: "Troca",
   reparo: "Reparo",
-  compra: "Compra",
-  instalacao: "Instalação",
+  compra_instalacao: "Compra/Instalação",
+  estoque_instalacao: "Estoque/Instalação",
 };
 
 function formatDataBR(isoDate){
