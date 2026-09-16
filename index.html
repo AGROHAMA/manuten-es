@@ -20,6 +20,7 @@
     --warn:#8A5A00;
     --card:#FFFFFF;
     --radius:16px;
+    --header-h:74px;
   }
   *{box-sizing:border-box;}
   html,body{margin:0;padding:0;}
@@ -260,12 +261,12 @@
     display:none;
     line-height:1.4;
     position:fixed;
-    top:14px;
+    top:calc(var(--header-h, 74px) + 10px);
     left:50%;
     transform:translateX(-50%);
     width:calc(100% - 32px);
     max-width:520px;
-    z-index:80;
+    z-index:15;
     box-shadow:0 6px 20px rgba(0,0,0,.18);
   }
   .banner.show{display:block;}
@@ -472,6 +473,17 @@
 </div>
 
 <script>
+// ---------- Ajusta a posição dos avisos (banners) para nunca cobrir o cabeçalho/engrenagem ----------
+function ajustarAlturaCabecalho(){
+  const header = document.querySelector("header");
+  if (header) {
+    document.documentElement.style.setProperty("--header-h", header.offsetHeight + "px");
+  }
+}
+ajustarAlturaCabecalho();
+window.addEventListener("load", ajustarAlturaCabecalho);
+window.addEventListener("resize", ajustarAlturaCabecalho);
+
 // ---------- Lista de máquinas: [codigo, modelo, marca, serie, chassi, ano, categoria] ----------
 // Categorias usadas no menu (nessa ordem): "Tratores", "Implementos e Equipamentos", "Veículos"
 // Regra combinada com o usuário: tudo que tem código Kh entra em Tratores, tudo que tem código Nh entra em Implementos e Equipamentos.
