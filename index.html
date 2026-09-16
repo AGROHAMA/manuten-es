@@ -197,15 +197,20 @@
     background:none;border:none;color:var(--green-med);font-weight:600;font-size:14px;padding:8px 4px;
   }
 
+  .media-btn-row{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+  }
   .media-add-btn{
-    width:100%;
-    padding:14px;
+    flex:1 1 140px;
+    padding:14px 8px;
     border:2px dashed #C7D9CB;
     border-radius:14px;
     background:var(--green-light);
     color:var(--green-dark);
     font-weight:700;
-    font-size:15px;
+    font-size:14.5px;
   }
   .media-grid{
     display:grid;
@@ -420,8 +425,12 @@
 
     <div class="card">
       <label>Fotos e vídeos (opcional)</label>
-      <input type="file" id="mediaInput" accept="image/*,video/*" multiple capture style="display:none;">
-      <button type="button" class="media-add-btn" id="btnAddMedia">📷 Adicionar foto ou vídeo</button>
+      <input type="file" id="mediaInputCamera" accept="image/*" capture="environment" style="display:none;">
+      <input type="file" id="mediaInputGallery" accept="image/*,video/*" multiple style="display:none;">
+      <div class="media-btn-row">
+        <button type="button" class="media-add-btn" id="btnAddMediaCamera">📷 Tirar foto</button>
+        <button type="button" class="media-add-btn" id="btnAddMediaGallery">🖼️ Galeria (fotos/vídeos)</button>
+      </div>
       <div class="media-grid" id="mediaGrid"></div>
       <div class="hint">Pode anexar mais de uma. Prefira vídeos curtos — arquivos grandes demoram mais para enviar com sinal fraco no campo.</div>
     </div>
@@ -782,14 +791,16 @@ document.getElementById("btnRerecord").addEventListener("click", () => {
 
 // ---------- Fotos e vídeos ----------
 let mediaFiles = []; // { file, url, isVideo }
-const mediaInput = document.getElementById("mediaInput");
+const mediaInputCamera = document.getElementById("mediaInputCamera");
+const mediaInputGallery = document.getElementById("mediaInputGallery");
 const mediaGrid = document.getElementById("mediaGrid");
 const MAX_MEDIA = 6;
 
-document.getElementById("btnAddMedia").addEventListener("click", () => mediaInput.click());
+document.getElementById("btnAddMediaCamera").addEventListener("click", () => mediaInputCamera.click());
+document.getElementById("btnAddMediaGallery").addEventListener("click", () => mediaInputGallery.click());
 
-mediaInput.addEventListener("change", () => {
-  const files = Array.from(mediaInput.files || []);
+function adicionarArquivosDeMidia(fileList){
+  const files = Array.from(fileList || []);
   for (const file of files){
     if (mediaFiles.length >= MAX_MEDIA){
       alert(`Máximo de ${MAX_MEDIA} arquivos por relatório.`);
@@ -801,8 +812,17 @@ mediaInput.addEventListener("change", () => {
       isVideo: file.type.startsWith("video/"),
     });
   }
-  mediaInput.value = "";
   renderMediaGrid();
+}
+
+mediaInputCamera.addEventListener("change", () => {
+  adicionarArquivosDeMidia(mediaInputCamera.files);
+  mediaInputCamera.value = "";
+});
+
+mediaInputGallery.addEventListener("change", () => {
+  adicionarArquivosDeMidia(mediaInputGallery.files);
+  mediaInputGallery.value = "";
 });
 
 function renderMediaGrid(){
