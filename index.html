@@ -303,6 +303,52 @@
     line-height:1.5;
     color:var(--text);
   }
+
+  /* ---------- Navegação por abas + Minhas Tarefas ---------- */
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .tabbar{
+    position:fixed;left:0;right:0;bottom:0;
+    background:#fff;border-top:1px solid #E5EAE5;
+    display:flex;
+    padding:8px 0 max(10px, env(safe-area-inset-bottom));
+    z-index:20;
+    box-shadow:0 -1px 6px rgba(0,0,0,.06);
+  }
+  .tabbar button{
+    flex:1;background:none;border:none;
+    display:flex;flex-direction:column;align-items:center;gap:2px;
+    font-size:11px;font-weight:600;color:var(--muted);padding:6px 0;
+  }
+  .tabbar button .tab-icon{font-size:19px;line-height:1;}
+  .tabbar button.active{color:var(--green-dark);font-weight:700;}
+
+  .role-toggle{display:flex;gap:6px;background:var(--green-light);padding:4px;border-radius:12px;margin-bottom:14px;}
+  .role-toggle button{flex:1;padding:9px 0;border:none;border-radius:9px;background:transparent;color:var(--muted);font-weight:600;font-size:13px;}
+  .role-toggle button.active{background:var(--green-dark);color:#fff;font-weight:700;}
+
+  .task-card{background:var(--card);border-radius:var(--radius);padding:16px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.06);}
+  .task-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;margin-bottom:8px;}
+  .task-maquina{font-size:16px;font-weight:700;color:var(--text);}
+  .task-badge{font-size:11px;font-weight:700;border-radius:8px;padding:4px 8px;white-space:nowrap;flex:none;}
+  .task-badge.urg-Alta{color:var(--danger);background:#FBEAE9;}
+  .task-badge.urg-Média{color:var(--warn);background:#FFF6E5;}
+  .task-badge.urg-Baixa{color:var(--muted);background:#EEF2EE;}
+  .task-problema{font-size:14px;color:var(--text);line-height:1.4;margin-bottom:6px;}
+  .task-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
+  .task-scheduled{display:flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green-dark);border-radius:10px;padding:9px 10px;font-size:13px;font-weight:600;margin-bottom:8px;}
+  .task-pick-row{display:flex;gap:8px;margin-bottom:8px;}
+  .task-pick-row button{flex:1;padding:10px 0;border-radius:10px;border:1.5px solid var(--green-med);background:#fff;color:var(--green-med);font-weight:600;font-size:12.5px;}
+  .task-btn{padding:9px 16px;border-radius:10px;border:none;background:var(--green-dark);color:#fff;font-weight:600;font-size:13px;}
+  .task-empty{text-align:center;color:var(--muted);font-size:14px;padding:50px 20px;}
+  .task-hint{text-align:center;color:var(--muted);font-size:13.5px;padding:20px;}
+
+  .encaminhar-box{border:1.5px solid var(--green-light);}
+  .encaminhar-box .badge-novo{
+    font-size:10px;font-weight:700;color:var(--warn);background:#FFF6E5;
+    border-radius:6px;padding:2px 6px;margin-left:6px;vertical-align:middle;
+  }
 </style>
 </head>
 <body>
@@ -318,7 +364,7 @@
   <button class="gear-btn" id="btnSettings" aria-label="Configurações">⚙️</button>
 </header>
 
-<main>
+<main id="screenNovoRelatorio" class="screen active">
 
   <div id="bannerOk" class="banner ok">✅ Relatório enviado com sucesso!</div>
   <div id="bannerErr" class="banner err">⚠️ Não consegui enviar agora. Verifique a internet — vou guardar e tentar de novo sozinho.</div>
@@ -423,6 +469,18 @@
       </div>
     </div>
 
+    <div class="card encaminhar-box" id="cardEncaminhar" style="display:none;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+        <label style="margin-bottom:0;">Encaminhar para</label>
+      </div>
+      <div class="hint">Quem você marcar vê este relatório em "Minhas Tarefas" e agenda o atendimento direto pelo app.</div>
+      <div class="toggle-row" id="encaminharRow">
+        <button type="button" class="toggle-btn enc-btn" data-val="mecanico">Mecânico</button>
+        <button type="button" class="toggle-btn enc-btn" data-val="eletricista">Eletricista</button>
+        <button type="button" class="toggle-btn enc-btn" data-val="ambos">Ambos</button>
+      </div>
+    </div>
+
     <div class="card">
       <label>Fotos e vídeos (opcional)</label>
       <input type="file" id="mediaInputCamera" accept="image/*" capture="environment" style="display:none;">
@@ -456,6 +514,28 @@
 
 </main>
 
+<main id="screenMinhasTarefas" class="screen">
+
+  <div class="role-toggle" id="roleToggle">
+    <button type="button" id="btnRoleMecanico" data-val="mecanico">🔧 Mecânico</button>
+    <button type="button" id="btnRoleEletricista" data-val="eletricista">⚡ Eletricista</button>
+  </div>
+
+  <div id="tarefasList"></div>
+  <div class="task-empty" id="tarefasEmpty" style="display:none;">Nenhuma pendência para este perfil no momento. 🎉</div>
+  <div class="task-hint" id="tarefasHint" style="display:none;">Configure a URL de tarefas em ⚙️ Configurações para ver suas pendências aqui.</div>
+
+</main>
+
+<nav class="tabbar">
+  <button type="button" id="tabNovo" class="active">
+    <div class="tab-icon">✚</div>Novo Relatório
+  </button>
+  <button type="button" id="tabTarefas">
+    <div class="tab-icon">📋</div>Minhas Tarefas
+  </button>
+</nav>
+
 <div class="settings-overlay" id="settingsOverlay">
   <div class="settings-sheet">
     <h2>Configuração (uma vez só)</h2>
@@ -464,6 +544,19 @@
       <input type="text" id="flowUrl" placeholder="https://prod-00.westus.logic.azure.com/...">
     </div>
     <div class="hint">Essa é a URL do gatilho HTTP criado no Power Automate — cole aqui uma vez e o app lembra neste celular.</div>
+    <div class="field">
+      <label for="tarefasUrl">URL do fluxo de Tarefas (Power Automate)</label>
+      <input type="text" id="tarefasUrl" placeholder="https://prod-00.westus.logic.azure.com/...">
+    </div>
+    <div class="hint">URL do fluxo "app_eletricista - Tarefas", usada pela tela "Minhas Tarefas".</div>
+    <div class="field">
+      <label for="meuPerfilSelect">Meu perfil (para ver "Minhas Tarefas")</label>
+      <select id="meuPerfilSelect">
+        <option value="">Selecione...</option>
+        <option value="mecanico">Mecânico</option>
+        <option value="eletricista">Eletricista</option>
+      </select>
+    </div>
     <div class="close-row">
       <button type="button" class="btn-secondary" id="btnCancelSettings">Cancelar</button>
       <button type="button" class="btn-primary" id="btnSaveSettings">Salvar</button>
@@ -702,6 +795,10 @@ function setConcluido(v){
   concluido = v;
   btnSim.classList.toggle("active-yes", v === "sim");
   btnNao.classList.toggle("active-no", v === "nao");
+  const cardEncaminhar = document.getElementById("cardEncaminhar");
+  if (cardEncaminhar){
+    cardEncaminhar.style.display = (v === "nao") ? "block" : "none";
+  }
 }
 btnSim.addEventListener("click", () => setConcluido("sim"));
 btnNao.addEventListener("click", () => setConcluido("nao"));
@@ -712,6 +809,17 @@ document.querySelectorAll(".urg-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     urgencia = btn.dataset.val;
     document.querySelectorAll(".urg-btn").forEach(b => b.classList.remove("active-pick"));
+    btn.classList.add("active-pick");
+  });
+});
+
+// ---------- Encaminhar para (Mecânico/Eletricista/Ambos) ----------
+let encaminharPara = null;
+let vinculoTarefaId = null;
+document.querySelectorAll(".enc-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    encaminharPara = btn.dataset.val;
+    document.querySelectorAll(".enc-btn").forEach(b => b.classList.remove("active-pick"));
     btn.classList.add("active-pick");
   });
 });
@@ -861,14 +969,24 @@ function renderMediaGrid(){
 // ---------- Configurações (URL do flow) ----------
 const settingsOverlay = document.getElementById("settingsOverlay");
 const flowUrlInput = document.getElementById("flowUrl");
+const tarefasUrlInput = document.getElementById("tarefasUrl");
+const meuPerfilSelect = document.getElementById("meuPerfilSelect");
 document.getElementById("btnSettings").addEventListener("click", () => {
   flowUrlInput.value = localStorage.getItem("flowUrl") || "";
+  tarefasUrlInput.value = localStorage.getItem("tarefasUrl") || "";
+  meuPerfilSelect.value = localStorage.getItem("meuPerfil") || "";
   settingsOverlay.classList.add("show");
 });
 document.getElementById("btnCancelSettings").addEventListener("click", () => settingsOverlay.classList.remove("show"));
 document.getElementById("btnSaveSettings").addEventListener("click", () => {
   localStorage.setItem("flowUrl", flowUrlInput.value.trim());
+  localStorage.setItem("tarefasUrl", tarefasUrlInput.value.trim());
+  localStorage.setItem("meuPerfil", meuPerfilSelect.value);
   settingsOverlay.classList.remove("show");
+  atualizarVisibilidadeTabTarefas();
+  if (screenTarefas.classList.contains("active")){
+    carregarTarefas();
+  }
 });
 
 // ---------- Montagem do relatório no padrão oficial Agrohama ----------
@@ -1103,6 +1221,43 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
       });
     }
     await sendPayload(payload);
+
+    // ---------- Best-effort: abrir ou concluir tarefa no fluxo "app_eletricista - Tarefas" ----------
+    try{
+      if (concluido === "nao" && encaminharPara){
+        const maquinaLabel = maquina === "OUTRA"
+          ? (outraMaquinaNomeInput.value.trim() || "Máquina não listada")
+          : (() => { const mm = findMaquina(maquina); return mm ? `${maquina} — ${mm[1]}` : maquina; })();
+        await callTarefasFlow({
+          acao: "abrir",
+          reportId: payload.reportId,
+          maquina: maquinaLabel,
+          maquinaCodigo: maquina,
+          problema: payload.problema || payload.item,
+          urgencia: payload.urgencia,
+          destino: encaminharPara,
+          reportadoPor: payload.tecnico,
+          fazenda: payload.fazenda,
+          tipoAcao: payload.tipoAcao,
+          item: payload.item,
+          horimetro: payload.horimetro,
+          dataServico: payload.data,
+          criadoEm: payload.enviadoEm,
+        });
+      } else if (vinculoTarefaId){
+        await callTarefasFlow({
+          acao: "concluir",
+          id: vinculoTarefaId,
+          solucao: payload.solucao,
+          material: payload.material,
+          horas: payload.horas,
+          concluidoEm: payload.enviadoEm,
+        });
+      }
+    }catch(tarefaErr){
+      // não bloqueia o envio do relatório — a tarefa pode ser sincronizada depois
+    }
+
     window.scrollTo({top:0, behavior:"smooth"});
     bannerOk.classList.add("show");
     clearTimeout(bannerOkTimer);
@@ -1114,6 +1269,9 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
     setConcluido(null);
     urgencia = null;
     document.querySelectorAll(".urg-btn").forEach(b => b.classList.remove("active-pick"));
+    encaminharPara = null;
+    vinculoTarefaId = null;
+    document.querySelectorAll(".enc-btn").forEach(b => b.classList.remove("active-pick"));
     document.querySelectorAll(".check-item").forEach(el => el.classList.remove("checked"));
     machinePreview.classList.remove("show");
     campoOutraMaquina.style.display = "none";
@@ -1139,6 +1297,215 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
     trySendQueue();
   }
 });
+
+// ---------- Navegação por abas (Novo Relatório / Minhas Tarefas) ----------
+const screenNovo = document.getElementById("screenNovoRelatorio");
+const screenTarefas = document.getElementById("screenMinhasTarefas");
+const tabNovo = document.getElementById("tabNovo");
+const tabTarefas = document.getElementById("tabTarefas");
+
+function showScreen(name){
+  const isTarefas = name === "tarefas";
+  screenNovo.classList.toggle("active", !isTarefas);
+  screenTarefas.classList.toggle("active", isTarefas);
+  tabNovo.classList.toggle("active", !isTarefas);
+  tabTarefas.classList.toggle("active", isTarefas);
+  if (isTarefas) carregarTarefas();
+}
+tabNovo.addEventListener("click", () => showScreen("novo"));
+tabTarefas.addEventListener("click", () => showScreen("tarefas"));
+
+function atualizarVisibilidadeTabTarefas(){
+  const tarefasUrl = localStorage.getItem("tarefasUrl");
+  tabTarefas.style.display = tarefasUrl ? "flex" : "none";
+}
+atualizarVisibilidadeTabTarefas();
+
+// ---------- Meu perfil (Mecânico/Eletricista) ----------
+function getPerfil(){
+  return localStorage.getItem("meuPerfil") || "";
+}
+function setPerfil(v){
+  localStorage.setItem("meuPerfil", v);
+  document.getElementById("btnRoleMecanico").classList.toggle("active", v === "mecanico");
+  document.getElementById("btnRoleEletricista").classList.toggle("active", v === "eletricista");
+  carregarTarefas();
+}
+document.getElementById("btnRoleMecanico").addEventListener("click", () => setPerfil("mecanico"));
+document.getElementById("btnRoleEletricista").addEventListener("click", () => setPerfil("eletricista"));
+(() => {
+  const perfilSalvo = getPerfil();
+  if (perfilSalvo){
+    document.getElementById("btnRoleMecanico").classList.toggle("active", perfilSalvo === "mecanico");
+    document.getElementById("btnRoleEletricista").classList.toggle("active", perfilSalvo === "eletricista");
+  }
+})();
+
+// ---------- Chamadas ao fluxo "app_eletricista - Tarefas" ----------
+async function callTarefasFlow(body){
+  const tarefasUrl = localStorage.getItem("tarefasUrl");
+  if (!tarefasUrl) throw new Error("no-tarefas-url");
+  const res = await fetch(tarefasUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error("http-" + res.status);
+  const text = await res.text();
+  try{ return text ? JSON.parse(text) : null; }catch(e){ return null; }
+}
+
+// ---------- Minhas Tarefas: lista, agendar, concluir ----------
+const tarefasList = document.getElementById("tarefasList");
+const tarefasEmpty = document.getElementById("tarefasEmpty");
+const tarefasHint = document.getElementById("tarefasHint");
+let schedulingTaskId = null;
+let currentTarefas = [];
+
+function badgeClass(urg){
+  if (urg === "Alta") return "task-badge urg-Alta";
+  if (urg === "Baixa") return "task-badge urg-Baixa";
+  return "task-badge urg-Média";
+}
+
+function renderTarefas(items){
+  tarefasList.innerHTML = "";
+  if (!items || !items.length){
+    tarefasEmpty.style.display = "block";
+    return;
+  }
+  tarefasEmpty.style.display = "none";
+
+  items.forEach(item => {
+    const card = document.createElement("div");
+    card.className = "task-card";
+
+    const top = document.createElement("div");
+    top.className = "task-top";
+    const maqDiv = document.createElement("div");
+    maqDiv.className = "task-maquina";
+    maqDiv.textContent = item.maquina || "Máquina não informada";
+    const badgeDiv = document.createElement("div");
+    badgeDiv.className = badgeClass(item.urgencia);
+    badgeDiv.textContent = item.urgencia || "Média";
+    top.appendChild(maqDiv);
+    top.appendChild(badgeDiv);
+    card.appendChild(top);
+
+    const problema = document.createElement("div");
+    problema.className = "task-problema";
+    problema.textContent = item.problema || "Sem descrição.";
+    card.appendChild(problema);
+
+    const meta = document.createElement("div");
+    meta.className = "task-meta";
+    meta.textContent = `Reportado por ${item.reportadoPor || "—"}${item.criadoEm ? " · " + new Date(item.criadoEm).toLocaleDateString("pt-BR") : ""}`;
+    card.appendChild(meta);
+
+    if (item.agendadoLabel){
+      const sched = document.createElement("div");
+      sched.className = "task-scheduled";
+      sched.innerHTML = `<span>✓ Agendado para ${item.agendadoLabel}</span>`;
+      card.appendChild(sched);
+    }
+
+    if (schedulingTaskId === item.id){
+      const pickRow = document.createElement("div");
+      pickRow.className = "task-pick-row";
+      [["hoje", "Hoje"], ["amanha", "Amanhã"], ["semana", "Esta semana"]].forEach(([val, label]) => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.textContent = label;
+        b.addEventListener("click", () => agendarTarefa(item, val, label));
+        pickRow.appendChild(b);
+      });
+      card.appendChild(pickRow);
+    }
+
+    const actions = document.createElement("div");
+    actions.style.display = "flex";
+    actions.style.gap = "8px";
+
+    if (!item.agendadoLabel && schedulingTaskId !== item.id){
+      const btnAgendar = document.createElement("button");
+      btnAgendar.type = "button";
+      btnAgendar.className = "task-btn";
+      btnAgendar.style.background = "var(--green-med)";
+      btnAgendar.textContent = "Agendar";
+      btnAgendar.addEventListener("click", () => {
+        schedulingTaskId = item.id;
+        renderTarefas(currentTarefas);
+      });
+      actions.appendChild(btnAgendar);
+    }
+
+    const btnConcluir = document.createElement("button");
+    btnConcluir.type = "button";
+    btnConcluir.className = "task-btn";
+    btnConcluir.textContent = "Concluir atendimento";
+    btnConcluir.addEventListener("click", () => iniciarConclusao(item));
+    actions.appendChild(btnConcluir);
+
+    card.appendChild(actions);
+    tarefasList.appendChild(card);
+  });
+}
+
+async function carregarTarefas(){
+  const perfil = getPerfil();
+  const tarefasUrl = localStorage.getItem("tarefasUrl");
+  if (!tarefasUrl){
+    tarefasHint.style.display = "block";
+    tarefasHint.textContent = "Configure a URL do fluxo de Tarefas em ⚙️ Configurações.";
+    tarefasList.innerHTML = "";
+    tarefasEmpty.style.display = "none";
+    return;
+  }
+  if (!perfil){
+    tarefasHint.style.display = "block";
+    tarefasHint.textContent = "Escolha seu perfil (Mecânico ou Eletricista) acima.";
+    tarefasList.innerHTML = "";
+    tarefasEmpty.style.display = "none";
+    return;
+  }
+  tarefasHint.style.display = "none";
+  tarefasList.innerHTML = `<div class="task-hint">Carregando...</div>`;
+  try{
+    const data = await callTarefasFlow({ acao: "listar", perfil });
+    currentTarefas = (data && data.tarefas) || [];
+    renderTarefas(currentTarefas);
+  }catch(e){
+    tarefasList.innerHTML = "";
+    tarefasHint.style.display = "block";
+    tarefasHint.textContent = "Não consegui carregar as tarefas agora. Verifique a internet.";
+  }
+}
+
+async function agendarTarefa(item, val, label){
+  schedulingTaskId = null;
+  try{
+    await callTarefasFlow({ acao: "agendar", id: item.id, quando: val, quandoLabel: label });
+  }catch(e){
+    // segue mesmo assim; a próxima atualização da lista corrige
+  }
+  await carregarTarefas();
+}
+
+function iniciarConclusao(item){
+  vinculoTarefaId = item.id;
+  encaminharPara = null;
+  document.getElementById("problema").value = item.problema || "";
+  if (item.fazenda) fazendaInput.value = item.fazenda;
+  if (item.item) document.getElementById("item").value = item.item;
+  if (item.tipoAcao) document.getElementById("tipoAcao").value = item.tipoAcao;
+  if (item.maquinaCodigo){
+    const m = findMaquina(item.maquinaCodigo);
+    if (m) selecionarMaquina(item.maquinaCodigo, `${item.maquinaCodigo} — ${m[1]}`);
+  }
+  setConcluido("sim");
+  showScreen("novo");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
 
 // ---------- Service worker ----------
 if ("serviceWorker" in navigator){
