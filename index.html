@@ -1179,7 +1179,7 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
       } else if (vinculoTarefaId){
         await callTarefasFlow({
           acao: "concluir",
-          id: vinculoTarefaId,
+          id: String(vinculoTarefaId),
           solucao: payload.solucao,
           material: payload.material,
           horas: payload.horas,
@@ -1454,7 +1454,7 @@ async function agendarTarefa(item, val, label){
     return;
   }
   try{
-    await callTarefasFlow({ acao: "agendar", id: item.ID, quando: val, quandoLabel: label });
+    await callTarefasFlow({ acao: "agendar", id: String(item.ID), quando: val, quandoLabel: label });
   }catch(e){
     alert("Não consegui agendar agora.\nErro: " + (e && e.message ? e.message : String(e)) + "\nVerifique a internet e tente de novo.");
   }
