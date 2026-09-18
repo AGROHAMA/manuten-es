@@ -338,9 +338,12 @@
   .task-problema{font-size:14px;color:var(--text);line-height:1.4;margin-bottom:6px;}
   .task-meta{font-size:12px;color:var(--muted);margin-bottom:10px;}
   .task-scheduled{display:flex;align-items:center;gap:6px;background:var(--green-light);color:var(--green-dark);border-radius:10px;padding:9px 10px;font-size:13px;font-weight:600;margin-bottom:8px;}
-  .task-pick-row{display:flex;gap:8px;margin-bottom:8px;}
+  .task-pick-row{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;}
   .task-pick-row button{flex:1;padding:10px 0;border-radius:10px;border:1.5px solid var(--green-med);background:#fff;color:var(--green-med);font-weight:600;font-size:12.5px;}
+  .task-pick-row .task-pick-btns{display:flex;gap:8px;}
+  .task-datetime-input{width:100%;box-sizing:border-box;padding:10px;border-radius:10px;border:1.5px solid var(--green-med);color:var(--text);font-size:14px;font-family:inherit;}
   .task-btn{padding:9px 16px;border-radius:10px;border:none;background:var(--green-dark);color:#fff;font-weight:600;font-size:13px;}
+  .task-btn-cancel{background:#9aa39a;}
   .task-empty{text-align:center;color:var(--muted);font-size:14px;padding:50px 20px;}
   .task-hint{text-align:center;color:var(--muted);font-size:13.5px;padding:20px;}
 
@@ -1459,13 +1462,45 @@ function renderTarefas(items){
     if (schedulingTaskId === item.ID){
       const pickRow = document.createElement("div");
       pickRow.className = "task-pick-row";
-      [["hoje", "Hoje"], ["amanha", "Amanhã"], ["semana", "Esta semana"]].forEach(([val, label]) => {
-        const b = document.createElement("button");
-        b.type = "button";
-        b.textContent = label;
-        b.addEventListener("click", () => agendarTarefa(item, val, label));
-        pickRow.appendChild(b);
+
+      const dtInput = document.createElement("input");
+      dtInput.type = "datetime-local";
+      dtInput.className = "task-datetime-input";
+      // sugere a próxima hora cheia como valor inicial
+      const sugestao = new Date();
+      sugestao.setMinutes(0, 0, 0);
+      sugestao.setHours(sugestao.getHours() + 1);
+      const pad = n => String(n).padStart(2, "0");
+      dtInput.value = `${sugestao.getFullYear()}-${pad(sugestao.getMonth() + 1)}-${pad(sugestao.getDate())}T${pad(sugestao.getHours())}:${pad(sugestao.getMinutes())}`;
+
+      const btnRow = document.createElement("div");
+      btnRow.className = "task-pick-btns";
+
+      const btnConfirmar = document.createElement("button");
+      btnConfirmar.type = "button";
+      btnConfirmar.className = "task-btn";
+      btnConfirmar.textContent = "Confirmar";
+      btnConfirmar.addEventListener("click", () => {
+        if (!dtInput.value) return;
+        const d = new Date(dtInput.value);
+        if (isNaN(d.getTime())) return;
+        const label = d.toLocaleString("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
+        agendarTarefa(item, dtInput.value, label);
       });
+
+      const btnCancelar = document.createElement("button");
+      btnCancelar.type = "button";
+      btnCancelar.className = "task-btn task-btn-cancel";
+      btnCancelar.textContent = "Cancelar";
+      btnCancelar.addEventListener("click", () => {
+        schedulingTaskId = null;
+        renderTarefas(currentTarefas);
+      });
+
+      btnRow.appendChild(btnConfirmar);
+      btnRow.appendChild(btnCancelar);
+      pickRow.appendChild(dtInput);
+      pickRow.appendChild(btnRow);
       card.appendChild(pickRow);
     }
 
