@@ -527,9 +527,50 @@
 
 </main>
 
+<main id="screenPedidoRapido" class="screen">
+
+  <div id="pedidoBannerOk" class="banner ok">✅ Pedido enviado! Quem for atender já vê em "Minhas Tarefas".</div>
+  <div id="pedidoBannerErr" class="banner err">⚠️ Não consegui enviar agora. Vou guardar e tentar de novo sozinho.</div>
+  <div id="pedidoBannerPending" class="banner pending"></div>
+
+  <form id="pedidoForm">
+    <div class="card">
+      <h3>Pedido de atendimento</h3>
+      <div class="field">
+        <label for="pedidoMaquina">Máquina / motor / equipamento</label>
+        <input type="text" id="pedidoMaquina" list="pedidoMaquinaOptions" placeholder="Ex.: KH 62, motor da bomba do poço..." required>
+        <datalist id="pedidoMaquinaOptions"></datalist>
+      </div>
+      <div class="field">
+        <label for="pedidoSolicitante">Quem está solicitando</label>
+        <input type="text" id="pedidoSolicitante" placeholder="Ex.: José, encarregado da Fazenda Santa Rita" required>
+      </div>
+      <div class="field">
+        <label>Para quem?</label>
+        <div class="toggle-row" id="pedidoDestinoRow">
+          <button type="button" class="toggle-btn ped-enc-btn" data-val="mecanico">Mecânico</button>
+          <button type="button" class="toggle-btn ped-enc-btn" data-val="eletricista">Eletricista</button>
+          <button type="button" class="toggle-btn ped-enc-btn" data-val="ambos">Ambos</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="pedidoDescricao">O que está acontecendo?</label>
+        <textarea id="pedidoDescricao" placeholder="Ex.: motor não liga, fazendo barulho estranho..." required></textarea>
+      </div>
+    </div>
+
+    <button type="submit" class="submit-btn" id="btnPedidoSubmit">Enviar pedido</button>
+    <div class="hint" style="text-align:center;margin-top:10px;">Sem sinal agora? Pode enviar assim mesmo — guardo aqui e mando sozinho quando a internet voltar.</div>
+  </form>
+
+</main>
+
 <nav class="tabbar">
   <button type="button" id="tabNovo" class="active">
     <div class="tab-icon">✚</div>Novo Relatório
+  </button>
+  <button type="button" id="tabPedido">
+    <div class="tab-icon">🛠️</div>Pedido Rápido
   </button>
   <button type="button" id="tabTarefas">
     <div class="tab-icon">📋</div>Minhas Tarefas
@@ -1298,26 +1339,31 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
   }
 });
 
-// ---------- Navegação por abas (Novo Relatório / Minhas Tarefas) ----------
+// ---------- Navegação por abas (Novo Relatório / Pedido Rápido / Minhas Tarefas) ----------
 const screenNovo = document.getElementById("screenNovoRelatorio");
+const screenPedido = document.getElementById("screenPedidoRapido");
 const screenTarefas = document.getElementById("screenMinhasTarefas");
 const tabNovo = document.getElementById("tabNovo");
+const tabPedido = document.getElementById("tabPedido");
 const tabTarefas = document.getElementById("tabTarefas");
 
 function showScreen(name){
-  const isTarefas = name === "tarefas";
-  screenNovo.classList.toggle("active", !isTarefas);
-  screenTarefas.classList.toggle("active", isTarefas);
-  tabNovo.classList.toggle("active", !isTarefas);
-  tabTarefas.classList.toggle("active", isTarefas);
-  if (isTarefas) carregarTarefas();
+  screenNovo.classList.toggle("active", name === "novo");
+  screenPedido.classList.toggle("active", name === "pedido");
+  screenTarefas.classList.toggle("active", name === "tarefas");
+  tabNovo.classList.toggle("active", name === "novo");
+  tabPedido.classList.toggle("active", name === "pedido");
+  tabTarefas.classList.toggle("active", name === "tarefas");
+  if (name === "tarefas") carregarTarefas();
 }
 tabNovo.addEventListener("click", () => showScreen("novo"));
+tabPedido.addEventListener("click", () => showScreen("pedido"));
 tabTarefas.addEventListener("click", () => showScreen("tarefas"));
 
 function atualizarVisibilidadeTabTarefas(){
   const tarefasUrl = localStorage.getItem("tarefasUrl");
   tabTarefas.style.display = tarefasUrl ? "flex" : "none";
+  tabPedido.style.display = tarefasUrl ? "flex" : "none";
 }
 atualizarVisibilidadeTabTarefas();
 
@@ -1384,32 +1430,32 @@ function renderTarefas(items){
     top.className = "task-top";
     const maqDiv = document.createElement("div");
     maqDiv.className = "task-maquina";
-    maqDiv.textContent = item.maquina || "Máquina não informada";
+    maqDiv.textContent = item.Maquina || "Máquina não informada";
     const badgeDiv = document.createElement("div");
-    badgeDiv.className = badgeClass(item.urgencia);
-    badgeDiv.textContent = item.urgencia || "Média";
+    badgeDiv.className = badgeClass(item.Urgencia);
+    badgeDiv.textContent = item.Urgencia || "Média";
     top.appendChild(maqDiv);
     top.appendChild(badgeDiv);
     card.appendChild(top);
 
     const problema = document.createElement("div");
     problema.className = "task-problema";
-    problema.textContent = item.problema || "Sem descrição.";
+    problema.textContent = item.Problema || "Sem descrição.";
     card.appendChild(problema);
 
     const meta = document.createElement("div");
     meta.className = "task-meta";
-    meta.textContent = `Reportado por ${item.reportadoPor || "—"}${item.criadoEm ? " · " + new Date(item.criadoEm).toLocaleDateString("pt-BR") : ""}`;
+    meta.textContent = `Reportado por ${item.ReportadoPor || "—"}${item.CriadoEm ? " · " + new Date(item.CriadoEm).toLocaleDateString("pt-BR") : ""}`;
     card.appendChild(meta);
 
-    if (item.agendadoLabel){
+    if (item.AgendadoLabel){
       const sched = document.createElement("div");
       sched.className = "task-scheduled";
-      sched.innerHTML = `<span>✓ Agendado para ${item.agendadoLabel}</span>`;
+      sched.innerHTML = `<span>✓ Agendado para ${item.AgendadoLabel}</span>`;
       card.appendChild(sched);
     }
 
-    if (schedulingTaskId === item.id){
+    if (schedulingTaskId === item.Id){
       const pickRow = document.createElement("div");
       pickRow.className = "task-pick-row";
       [["hoje", "Hoje"], ["amanha", "Amanhã"], ["semana", "Esta semana"]].forEach(([val, label]) => {
@@ -1426,14 +1472,14 @@ function renderTarefas(items){
     actions.style.display = "flex";
     actions.style.gap = "8px";
 
-    if (!item.agendadoLabel && schedulingTaskId !== item.id){
+    if (!item.AgendadoLabel && schedulingTaskId !== item.Id){
       const btnAgendar = document.createElement("button");
       btnAgendar.type = "button";
       btnAgendar.className = "task-btn";
       btnAgendar.style.background = "var(--green-med)";
       btnAgendar.textContent = "Agendar";
       btnAgendar.addEventListener("click", () => {
-        schedulingTaskId = item.id;
+        schedulingTaskId = item.Id;
         renderTarefas(currentTarefas);
       });
       actions.appendChild(btnAgendar);
@@ -1484,7 +1530,7 @@ async function carregarTarefas(){
 async function agendarTarefa(item, val, label){
   schedulingTaskId = null;
   try{
-    await callTarefasFlow({ acao: "agendar", id: item.id, quando: val, quandoLabel: label });
+    await callTarefasFlow({ acao: "agendar", id: item.Id, quando: val, quandoLabel: label });
   }catch(e){
     // segue mesmo assim; a próxima atualização da lista corrige
   }
@@ -1492,20 +1538,139 @@ async function agendarTarefa(item, val, label){
 }
 
 function iniciarConclusao(item){
-  vinculoTarefaId = item.id;
+  vinculoTarefaId = item.Id;
   encaminharPara = null;
-  document.getElementById("problema").value = item.problema || "";
-  if (item.fazenda) fazendaInput.value = item.fazenda;
-  if (item.item) document.getElementById("item").value = item.item;
-  if (item.tipoAcao) document.getElementById("tipoAcao").value = item.tipoAcao;
-  if (item.maquinaCodigo){
-    const m = findMaquina(item.maquinaCodigo);
-    if (m) selecionarMaquina(item.maquinaCodigo, `${item.maquinaCodigo} — ${m[1]}`);
+  document.getElementById("problema").value = item.Problema || "";
+  if (item.Fazenda) fazendaInput.value = item.Fazenda;
+  if (item.Item) document.getElementById("item").value = item.Item;
+  if (item.TipoAcao) document.getElementById("tipoAcao").value = item.TipoAcao;
+  if (item.MaquinaCodigo){
+    const m = findMaquina(item.MaquinaCodigo);
+    if (m){
+      selecionarMaquina(item.MaquinaCodigo, `${item.MaquinaCodigo} — ${m[1]}`);
+    } else if (item.Maquina){
+      // veio de um Pedido Rápido com máquina/equipamento em texto livre (não está na lista oficial)
+      selecionarMaquina("OUTRA", "Outro (não está na lista)");
+      outraMaquinaNomeInput.value = item.Maquina;
+    }
   }
   setConcluido("sim");
   showScreen("novo");
   window.scrollTo({top:0, behavior:"smooth"});
 }
+
+// ---------- Pedido Rápido (solicitação simples de atendimento, sem preencher a OS toda) ----------
+(() => {
+  const datalist = document.getElementById("pedidoMaquinaOptions");
+  MAQUINAS.forEach(([codigo, modelo]) => {
+    const opt = document.createElement("option");
+    opt.value = `${codigo} — ${modelo}`;
+    datalist.appendChild(opt);
+  });
+})();
+
+function resolverMaquinaCodigoPedido(texto){
+  const alvo = normalizarBusca(texto);
+  const encontrada = MAQUINAS.find(m => normalizarBusca(`${m[0]} — ${m[1]}`) === alvo);
+  return encontrada ? encontrada[0] : texto;
+}
+
+let pedidoDestino = null;
+document.querySelectorAll(".ped-enc-btn").forEach(btn => {
+  btn.addEventListener("click", () => {
+    pedidoDestino = btn.dataset.val;
+    document.querySelectorAll(".ped-enc-btn").forEach(b => b.classList.remove("active-pick"));
+    btn.classList.add("active-pick");
+  });
+});
+
+function getPedidoQueue(){
+  return JSON.parse(localStorage.getItem("pendingPedidos") || "[]");
+}
+function savePedidoQueue(q){
+  localStorage.setItem("pendingPedidos", JSON.stringify(q));
+}
+
+const pedidoBannerOk = document.getElementById("pedidoBannerOk");
+const pedidoBannerErr = document.getElementById("pedidoBannerErr");
+const pedidoBannerPending = document.getElementById("pedidoBannerPending");
+
+async function trySendPedidoQueue(){
+  const queue = getPedidoQueue();
+  if (!queue.length){ pedidoBannerPending.classList.remove("show"); return; }
+  pedidoBannerPending.classList.add("show");
+  pedidoBannerPending.textContent = `⏳ ${queue.length} pedido(s) aguardando envio...`;
+  const remaining = [];
+  for (const body of queue){
+    try{ await callTarefasFlow(body); }
+    catch(e){ remaining.push(body); }
+  }
+  savePedidoQueue(remaining);
+  if (!remaining.length){
+    pedidoBannerPending.classList.remove("show");
+  } else {
+    pedidoBannerPending.textContent = `⏳ ${remaining.length} pedido(s) ainda aguardando envio (sem internet ou URL não configurada).`;
+  }
+}
+window.addEventListener("online", trySendPedidoQueue);
+window.addEventListener("load", trySendPedidoQueue);
+
+document.getElementById("pedidoForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  pedidoBannerOk.classList.remove("show");
+  pedidoBannerErr.classList.remove("show");
+
+  const maquinaTexto = document.getElementById("pedidoMaquina").value.trim();
+  const solicitante = document.getElementById("pedidoSolicitante").value.trim();
+  const descricao = document.getElementById("pedidoDescricao").value.trim();
+
+  if (!maquinaTexto){ alert("Diga qual máquina, motor ou equipamento."); return; }
+  if (!solicitante){ alert("Diga quem está solicitando."); return; }
+  if (!pedidoDestino){ alert("Escolha para quem é o pedido (Mecânico, Eletricista ou Ambos)."); return; }
+  if (!descricao){ alert("Descreva o que está acontecendo."); return; }
+
+  const btnPedido = document.getElementById("btnPedidoSubmit");
+  btnPedido.disabled = true;
+  btnPedido.textContent = "Enviando...";
+
+  const body = {
+    acao: "abrir",
+    reportId: genId(),
+    maquina: maquinaTexto,
+    maquinaCodigo: resolverMaquinaCodigoPedido(maquinaTexto),
+    problema: descricao,
+    urgencia: "Média",
+    destino: pedidoDestino,
+    reportadoPor: solicitante,
+    fazenda: "",
+    tipoAcao: "",
+    item: "",
+    horimetro: "",
+    dataServico: new Date().toISOString().slice(0, 10),
+    criadoEm: new Date().toISOString(),
+  };
+
+  try{
+    await callTarefasFlow(body);
+    window.scrollTo({top:0, behavior:"smooth"});
+    pedidoBannerOk.classList.add("show");
+    setTimeout(() => pedidoBannerOk.classList.remove("show"), 5000);
+    e.target.reset();
+    pedidoDestino = null;
+    document.querySelectorAll(".ped-enc-btn").forEach(b => b.classList.remove("active-pick"));
+  }catch(err){
+    // guarda na fila local pra tentar de novo depois (sem internet, ou URL ainda não configurada)
+    const queue = getPedidoQueue();
+    queue.push(body);
+    savePedidoQueue(queue);
+    window.scrollTo({top:0, behavior:"smooth"});
+    pedidoBannerErr.classList.add("show");
+  }finally{
+    btnPedido.disabled = false;
+    btnPedido.textContent = "Enviar pedido";
+    trySendPedidoQueue();
+  }
+});
 
 // ---------- Service worker ----------
 if ("serviceWorker" in navigator){
