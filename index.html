@@ -1431,9 +1431,10 @@ function renderTarefas(items){
     const maqDiv = document.createElement("div");
     maqDiv.className = "task-maquina";
     maqDiv.textContent = item.Maquina || "Máquina não informada";
+    const urgenciaValor = (item.Urgencia && typeof item.Urgencia === "object") ? item.Urgencia.Value : item.Urgencia;
     const badgeDiv = document.createElement("div");
-    badgeDiv.className = badgeClass(item.Urgencia);
-    badgeDiv.textContent = item.Urgencia || "Média";
+    badgeDiv.className = badgeClass(urgenciaValor);
+    badgeDiv.textContent = urgenciaValor || "Média";
     top.appendChild(maqDiv);
     top.appendChild(badgeDiv);
     card.appendChild(top);
@@ -1455,7 +1456,7 @@ function renderTarefas(items){
       card.appendChild(sched);
     }
 
-    if (schedulingTaskId === item.Id){
+    if (schedulingTaskId === item.ID){
       const pickRow = document.createElement("div");
       pickRow.className = "task-pick-row";
       [["hoje", "Hoje"], ["amanha", "Amanhã"], ["semana", "Esta semana"]].forEach(([val, label]) => {
@@ -1472,14 +1473,14 @@ function renderTarefas(items){
     actions.style.display = "flex";
     actions.style.gap = "8px";
 
-    if (!item.AgendadoLabel && schedulingTaskId !== item.Id){
+    if (!item.AgendadoLabel && schedulingTaskId !== item.ID){
       const btnAgendar = document.createElement("button");
       btnAgendar.type = "button";
       btnAgendar.className = "task-btn";
       btnAgendar.style.background = "var(--green-med)";
       btnAgendar.textContent = "Agendar";
       btnAgendar.addEventListener("click", () => {
-        schedulingTaskId = item.Id;
+        schedulingTaskId = item.ID;
         renderTarefas(currentTarefas);
       });
       actions.appendChild(btnAgendar);
@@ -1530,7 +1531,7 @@ async function carregarTarefas(){
 async function agendarTarefa(item, val, label){
   schedulingTaskId = null;
   try{
-    await callTarefasFlow({ acao: "agendar", id: item.Id, quando: val, quandoLabel: label });
+    await callTarefasFlow({ acao: "agendar", id: item.ID, quando: val, quandoLabel: label });
   }catch(e){
     // segue mesmo assim; a próxima atualização da lista corrige
   }
@@ -1538,7 +1539,7 @@ async function agendarTarefa(item, val, label){
 }
 
 function iniciarConclusao(item){
-  vinculoTarefaId = item.Id;
+  vinculoTarefaId = item.ID;
   encaminharPara = null;
   document.getElementById("problema").value = item.Problema || "";
   if (item.Fazenda) fazendaInput.value = item.Fazenda;
