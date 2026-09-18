@@ -165,34 +165,6 @@
   .check-item input{width:20px;height:20px;flex:none;}
   .check-item.checked{border-color:var(--green-med);background:var(--green-light);}
 
-  .audio-box{
-    border:2px dashed #C7D9CB;
-    border-radius:14px;
-    padding:18px;
-    text-align:center;
-  }
-  .rec-btn{
-    width:78px;height:78px;border-radius:50%;
-    background:var(--danger);
-    border:none;
-    color:#fff;
-    font-size:28px;
-    display:flex;align-items:center;justify-content:center;
-    margin:0 auto 10px;
-    box-shadow:0 3px 10px rgba(179,38,30,.35);
-  }
-  .rec-btn.recording{
-    animation:pulse 1.2s infinite;
-  }
-  @keyframes pulse{
-    0%{box-shadow:0 0 0 0 rgba(179,38,30,.5);}
-    70%{box-shadow:0 0 0 16px rgba(179,38,30,0);}
-    100%{box-shadow:0 0 0 0 rgba(179,38,30,0);}
-  }
-  .rec-status{font-size:14px;color:var(--muted);margin-bottom:4px;min-height:18px;}
-  .rec-timer{font-size:22px;font-weight:700;color:var(--green-dark);font-variant-numeric:tabular-nums;}
-  audio{width:100%;margin-top:12px;}
-  .audio-actions{display:flex;gap:10px;margin-top:12px;justify-content:center;}
   .link-btn{
     background:none;border:none;color:var(--green-med);font-weight:600;font-size:14px;padding:8px 4px;
   }
@@ -446,7 +418,7 @@
     </div>
 
     <div class="card">
-      <h3>Detalhes (opcional se já falar tudo no áudio)</h3>
+      <h3>Detalhes (opcional)</h3>
       <div class="field">
         <label for="problema">O que estava acontecendo?</label>
         <textarea id="problema" placeholder="Ex.: sirene de ré não funcionava"></textarea>
@@ -494,20 +466,6 @@
       </div>
       <div class="media-grid" id="mediaGrid"></div>
       <div class="hint">Pode anexar mais de uma. Prefira vídeos curtos — arquivos grandes demoram mais para enviar com sinal fraco no campo.</div>
-    </div>
-
-    <div class="card">
-      <label>Áudio explicando o serviço</label>
-      <div class="audio-box">
-        <button type="button" class="rec-btn" id="btnRec">🎤</button>
-        <div class="rec-status" id="recStatus">Toque para gravar</div>
-        <div class="rec-timer" id="recTimer"></div>
-        <audio id="audioPlayback" controls style="display:none;"></audio>
-        <div class="audio-actions" id="audioActions" style="display:none;">
-          <button type="button" class="link-btn" id="btnRerecord">Regravar</button>
-        </div>
-      </div>
-      <div class="hint">Pode falar livre — o que aconteceu, o que fez. Os campos acima já bastam para montar o relatório oficial; o áudio fica anexado como evidência extra.</div>
     </div>
 
     <button type="button" class="link-btn" id="btnPreview" style="margin-bottom:10px;">👁️ Ver como vai ficar o relatório</button>
@@ -875,72 +833,6 @@ document.querySelectorAll(".enc-btn").forEach(btn => {
   input.addEventListener("change", () => wrap.classList.toggle("checked", input.checked));
 });
 
-// ---------- Gravação de áudio ----------
-let mediaRecorder, audioChunks = [], audioBlob = null, recording = false, timerInterval, seconds = 0;
-const btnRec = document.getElementById("btnRec");
-const recStatus = document.getElementById("recStatus");
-const recTimer = document.getElementById("recTimer");
-const audioPlayback = document.getElementById("audioPlayback");
-const audioActions = document.getElementById("audioActions");
-
-function formatTime(s){
-  const m = Math.floor(s/60).toString().padStart(2,"0");
-  const r = (s%60).toString().padStart(2,"0");
-  return `${m}:${r}`;
-}
-
-async function startRecording(){
-  try{
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    audioChunks = [];
-    mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.ondataavailable = (e) => { if (e.data.size > 0) audioChunks.push(e.data); };
-    mediaRecorder.onstop = () => {
-      audioBlob = new Blob(audioChunks, { type: mediaRecorder.mimeType || "audio/webm" });
-      audioPlayback.src = URL.createObjectURL(audioBlob);
-      audioPlayback.style.display = "block";
-      audioActions.style.display = "flex";
-      recStatus.textContent = "Áudio gravado";
-      stream.getTracks().forEach(t => t.stop());
-    };
-    mediaRecorder.start();
-    recording = true;
-    seconds = 0;
-    recTimer.textContent = formatTime(seconds);
-    timerInterval = setInterval(() => { seconds++; recTimer.textContent = formatTime(seconds); }, 1000);
-    btnRec.classList.add("recording");
-    btnRec.textContent = "⏹️";
-    recStatus.textContent = "Gravando... toque para parar";
-    audioPlayback.style.display = "none";
-    audioActions.style.display = "none";
-  }catch(err){
-    recStatus.textContent = "Não consegui acessar o microfone. Verifique a permissão do navegador.";
-  }
-}
-
-function stopRecording(){
-  if (mediaRecorder && recording){
-    mediaRecorder.stop();
-  }
-  recording = false;
-  clearInterval(timerInterval);
-  btnRec.classList.remove("recording");
-  btnRec.textContent = "🎤";
-}
-
-btnRec.addEventListener("click", () => {
-  if (!recording) startRecording(); else stopRecording();
-});
-
-document.getElementById("btnRerecord").addEventListener("click", () => {
-  audioBlob = null;
-  audioPlayback.style.display = "none";
-  audioActions.style.display = "none";
-  recStatus.textContent = "Toque para gravar";
-  recTimer.textContent = "";
-  seconds = 0;
-});
-
 // ---------- Fotos e vídeos ----------
 let mediaFiles = []; // { file, url, isVideo }
 const mediaInputCamera = document.getElementById("mediaInputCamera");
@@ -1094,8 +986,8 @@ function buildReport(){
   const problema = document.getElementById("problema").value.trim();
   const solucao = document.getElementById("solucao").value.trim();
 
-  const relato = solucao || "Ver áudio anexado para detalhes completos do serviço.";
-  const sintoma = problema || "Não informado em texto — ver áudio anexado.";
+  const relato = solucao || "Ver fotos/vídeo anexados para detalhes completos do serviço.";
+  const sintoma = problema || "Não informado em texto — ver fotos/vídeo anexados.";
   const diagnostico = buildDiagnostico();
   const tecnico = document.getElementById("tecnico").value.trim() || "A CONFIRMAR";
   const fazenda = document.getElementById("fazenda").value.trim() || "A CONFIRMAR";
@@ -1253,10 +1145,6 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
   };
 
   try{
-    if (audioBlob){
-      payload.audioBase64 = await blobToBase64(audioBlob);
-      payload.audioMime = audioBlob.type;
-    }
     for (const m of mediaFiles){
       payload.midias.push({
         nome: m.file.name,
@@ -1320,11 +1208,6 @@ document.getElementById("reportForm").addEventListener("submit", async (e) => {
     machinePreview.classList.remove("show");
     campoOutraMaquina.style.display = "none";
     outraMaquinaNomeInput.required = false;
-    audioBlob = null;
-    audioPlayback.style.display = "none";
-    audioActions.style.display = "none";
-    recStatus.textContent = "Toque para gravar";
-    recTimer.textContent = "";
     mediaFiles.forEach(m => URL.revokeObjectURL(m.url));
     mediaFiles = [];
     renderMediaGrid();
