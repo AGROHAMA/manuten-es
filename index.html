@@ -1448,10 +1448,15 @@ async function carregarTarefas(){
 
 async function agendarTarefa(item, val, label){
   schedulingTaskId = null;
+  if (!item || !item.ID){
+    alert("Não consegui agendar: este item não tem um ID válido (item.ID = " + JSON.stringify(item && item.ID) + "). Atualize a lista e tente de novo.");
+    await carregarTarefas();
+    return;
+  }
   try{
     await callTarefasFlow({ acao: "agendar", id: item.ID, quando: val, quandoLabel: label });
   }catch(e){
-    // segue mesmo assim; a próxima atualização da lista corrige
+    alert("Não consegui agendar agora.\nErro: " + (e && e.message ? e.message : String(e)) + "\nVerifique a internet e tente de novo.");
   }
   await carregarTarefas();
 }
